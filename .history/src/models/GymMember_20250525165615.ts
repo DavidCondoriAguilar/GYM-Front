@@ -1,8 +1,3 @@
-import { MembershipPlan } from "./MembershipPlan";
-import { MembershipRecord } from "./MembershipRecord";
-import { Payment } from "./Payment";
-import { Promotion } from "./Promotion";
-
 export interface GymMember {
     id: string;
     name: string;
