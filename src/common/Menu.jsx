@@ -7,6 +7,7 @@ const menuItems = [
   { name: 'Members', icon: UserGroupIcon, path: '/members' },
   { name: 'Schedule', icon: CalendarIcon, path: '/schedule' },
   { name: 'Analytics', icon: ChartBarIcon, path: '/analytics' },
+  { name: 'Settings', icon: Cog6ToothIcon, path: '/settings' },
 ];
 
 export default function Menu({ isOpen, toggleMenu }) {

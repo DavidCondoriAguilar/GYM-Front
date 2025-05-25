@@ -1,0 +1,160 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { ChartBarIcon, UserGroupIcon, CurrencyDollarIcon, ClockIcon } from '@heroicons/react/24/outline';
+
+const AnalyticsPage = () => {
+  // Sample data for charts
+  const memberData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'New Members',
+        data: [12, 19, 3, 5, 2, 3],
+        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 2,
+        tension: 0.3,
+      },
+    ],
+  };
+
+  const revenueData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Revenue ($)',
+        data: [1250, 1900, 3000, 2800, 2100, 3200],
+        backgroundColor: 'rgba(124, 58, 237, 0.5)',
+        borderColor: 'rgba(124, 58, 237, 1)',
+        borderWidth: 2,
+        tension: 0.3,
+      },
+    ],
+  };
+
+  const stats = [
+    { name: 'Total Members', value: '1,234', icon: UserGroupIcon, change: '+12%', changeType: 'increase' },
+    { name: 'Monthly Revenue', value: '$12,345', icon: CurrencyDollarIcon, change: '+8.2%', changeType: 'increase' },
+    { name: 'Avg. Session', value: '45 min', icon: ClockIcon, change: '-2.3%', changeType: 'decrease' },
+  ];
+
+  return (
+    <div className="p-6">
+      <motion.h1 
+        className="text-3xl font-bold mb-6 text-gray-800"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Analytics Dashboard
+      </motion.h1>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <motion.div
+              key={stat.name}
+              className="bg-white rounded-xl shadow p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">{stat.name}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  stat.name === 'Total Members' ? 'bg-blue-100 text-blue-600' :
+                  stat.name === 'Monthly Revenue' ? 'bg-purple-100 text-purple-600' :
+                  'bg-yellow-100 text-yellow-600'
+                }`}>
+                  <Icon className="h-6 w-6" />
+                </div>
+              </div>
+              <div className={`mt-2 text-sm ${
+                stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {stat.change} from last month
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Members Chart */}
+        <motion.div 
+          className="bg-white rounded-xl shadow p-6"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">New Members</h3>
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <UserGroupIcon className="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg p-4">
+            <p className="text-gray-500">Chart: Monthly new members</p>
+            {/* In a real app, you would use a charting library like Chart.js or Recharts */}
+          </div>
+        </motion.div>
+
+        {/* Revenue Chart */}
+        <motion.div 
+          className="bg-white rounded-xl shadow p-6"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Monthly Revenue</h3>
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <CurrencyDollarIcon className="h-5 w-5 text-purple-600" />
+            </div>
+          </div>
+          <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg p-4">
+            <p className="text-gray-500">Chart: Monthly revenue data</p>
+            {/* In a real app, you would use a charting library like Chart.js or Recharts */}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Recent Activity */}
+      <motion.div 
+        className="bg-white rounded-xl shadow p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+          <div className="p-2 bg-green-100 rounded-lg">
+            <ClockIcon className="h-5 w-5 text-green-600" />
+          </div>
+        </div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+              <div className="p-2 bg-blue-100 rounded-lg text-blue-600 mr-4">
+                <UserGroupIcon className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">New member registered</p>
+                <p className="text-sm text-gray-500">Member #{1000 + item} joined the gym</p>
+              </div>
+              <span className="text-sm text-gray-400">{item}h ago</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default AnalyticsPage;
