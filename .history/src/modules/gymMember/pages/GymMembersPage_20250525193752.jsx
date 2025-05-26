@@ -21,7 +21,6 @@ import {
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'sonner';
-import ModalConfirm from '../components/ModalConfirm';
 import gymMemberService from '../services/gymMember.service';
 import GymMemberDetail from './GymMemberDetail';
 
@@ -48,7 +47,6 @@ export default function GymMembersPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState(null);
-  const [memberToDelete, setMemberToDelete] = useState(null);
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
   
   // Filter and sort members
@@ -489,9 +487,8 @@ export default function GymMembersPage() {
                             className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1.5 rounded-lg transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setMemberToDelete(member);
+                              // Handle delete
                             }}
-                            title="Eliminar miembro"
                           >
                             <TrashIcon className="h-4 w-4" />
                           </button>
@@ -557,27 +554,6 @@ export default function GymMembersPage() {
             onClose={() => setSelectedMember(null)} 
           />
         )}
-
-        {/* Delete Confirmation Modal */}
-        <ModalConfirm
-          isOpen={!!memberToDelete}
-          onClose={() => setMemberToDelete(null)}
-          onConfirm={async () => {
-            if (!memberToDelete) return;
-            try {
-              setLoading(true);
-              await gymMemberService.deleteMember(memberToDelete.id);
-              setMembers(members.filter(m => m.id !== memberToDelete.id));
-              setMemberToDelete(null);
-            } catch (error) {
-              console.error('Error deleting member:', error);
-              throw error; // This will be caught by the ModalConfirm component
-            } finally {
-              setLoading(false);
-            }
-          }}
-          memberName={memberToDelete?.name || 'este miembro'}
-        />
       </motion.div>
     </div>
   );

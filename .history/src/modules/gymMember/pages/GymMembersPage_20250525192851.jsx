@@ -21,9 +21,9 @@ import {
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'sonner';
-import ModalConfirm from '../components/ModalConfirm';
 import gymMemberService from '../services/gymMember.service';
 import GymMemberDetail from './GymMemberDetail';
+import SearchAndFilter from './SearchAndFilter';
 
 // Animation variants
 const container = {
@@ -48,7 +48,6 @@ export default function GymMembersPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState(null);
-  const [memberToDelete, setMemberToDelete] = useState(null);
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
   
   // Filter and sort members
@@ -67,12 +66,18 @@ export default function GymMembersPage() {
   
   // Stats calculations
   const stats = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+    
     const total = members.length;
     const active = members.filter(m => m.active).length;
-    const newToday = members.filter(member => 
-      new Date(member.registrationDate).toISOString().split('T')[0] === today
-    ).length;
+    const newToday = members.filter(member => {
+      if (!member.registrationDate) return false;
+      const registrationDate = new Date(member.registrationDate);
+      return registrationDate >= startOfDay;
+    }).length;
     
     // Calculate total revenue from payments
     const totalRevenue = members.reduce((sum, member) => {
@@ -224,54 +229,16 @@ export default function GymMembersPage() {
               {totalMembers} miembros en total • {activeMembers} activos • {newTodayCount} nuevos hoy
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <div className="relative w-full md:w-64">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="Buscar por nombre, email o teléfono..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex space-x-2">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-700 text-sm font-medium rounded-lg text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
-              >
-                {viewMode === 'table' ? (
-                  <>
-                    <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    Cuadrícula
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    Tabla
-                  </>
-                )}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-              >
-                <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                Nuevo Miembro
-              </motion.button>
-            </div>
-          </div>
+          <SearchAndFilter
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onAddMember={() => {
+              // Handle add new member
+              console.log('Add new member clicked');
+            }}
+          />
         </div>
 
         {/* Stats Cards */}
@@ -489,9 +456,8 @@ export default function GymMembersPage() {
                             className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1.5 rounded-lg transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setMemberToDelete(member);
+                              // Handle delete
                             }}
-                            title="Eliminar miembro"
                           >
                             <TrashIcon className="h-4 w-4" />
                           </button>
@@ -557,27 +523,6 @@ export default function GymMembersPage() {
             onClose={() => setSelectedMember(null)} 
           />
         )}
-
-        {/* Delete Confirmation Modal */}
-        <ModalConfirm
-          isOpen={!!memberToDelete}
-          onClose={() => setMemberToDelete(null)}
-          onConfirm={async () => {
-            if (!memberToDelete) return;
-            try {
-              setLoading(true);
-              await gymMemberService.deleteMember(memberToDelete.id);
-              setMembers(members.filter(m => m.id !== memberToDelete.id));
-              setMemberToDelete(null);
-            } catch (error) {
-              console.error('Error deleting member:', error);
-              throw error; // This will be caught by the ModalConfirm component
-            } finally {
-              setLoading(false);
-            }
-          }}
-          memberName={memberToDelete?.name || 'este miembro'}
-        />
       </motion.div>
     </div>
   );
