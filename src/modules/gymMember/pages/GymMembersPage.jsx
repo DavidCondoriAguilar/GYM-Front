@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   PlusIcon, 
@@ -12,10 +12,194 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
   UserGroupIcon,
-  ArrowTopRightOnSquareIcon
+  ArrowTopRightOnSquareIcon,
+  CurrencyDollarIcon,
+  CalendarIcon,
+  ClockIcon,
+  TagIcon,
+  XMarkIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'sonner';
 import gymMemberService from '../services/gymMember.service';
+
+// Componente para el modal de detalles del miembro
+const MemberDetailsModal = ({ member, onClose }) => {
+  if (!member) return null;
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency: 'PEN'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No especificada';
+    return new Date(dateString + 'T00:00:00').toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      timeZone: 'UTC'
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+      >
+        <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-white">{member.name}</h2>
+            <p className="text-gray-400 flex items-center">
+              <EnvelopeIcon className="h-4 w-4 mr-1" />
+              {member.email}
+            </p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-gray-700 transition-colors"
+          >
+            <XMarkIcon className="h-6 w-6" />
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Información Básica */}
+            <div className="bg-gray-750 p-5 rounded-xl">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <UserCircleIcon className="h-5 w-5 mr-2 text-blue-400" />
+                Información Básica
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm text-gray-400">Teléfono</p>
+                  <p className="text-white">{member.phone || 'No especificado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Estado</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    member.active 
+                      ? 'bg-green-900/30 text-green-400 border border-green-800'
+                      : 'bg-red-900/30 text-red-400 border border-red-800'
+                  }`}>
+                    {member.active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Fecha de Registro</p>
+                  <p className="text-white">{formatDate(member.registrationDate)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Membresía */}
+            <div className="bg-gray-750 p-5 rounded-xl">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <TagIcon className="h-5 w-5 mr-2 text-purple-400" />
+                Membresía
+              </h3>
+              {member.membershipPlan ? (
+                <>
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-400">Plan</p>
+                    <p className="text-white font-medium">{member.membershipPlan.name}</p>
+                    <p className="text-sm text-gray-400">{member.membershipPlan.description}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-400">Inicio:</span>
+                      <span className="text-white">{formatDate(member.membershipStart)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-400">Fin:</span>
+                      <span className="text-white">{formatDate(member.membershipEnd)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-400">Estado:</span>
+                      <span className="text-green-400">Activa</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-gray-400">Sin membresía activa</p>
+              )}
+            </div>
+
+            {/* Resumen de Pagos */}
+            <div className="bg-gray-750 p-5 rounded-xl">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <CurrencyDollarIcon className="h-5 w-5 mr-2 text-green-400" />
+                Resumen de Pagos
+              </h3>
+              {member.payments?.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-400">Total Pagado:</span>
+                    <span className="text-white font-medium">
+                      {formatCurrency(member.payments.reduce((sum, p) => sum + p.amount, 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-400">Último Pago:</span>
+                    <span className="text-white">
+                      {formatDate(member.payments[0]?.paymentDate)}
+                    </span>
+                  </div>
+                  <div className="pt-2">
+                    <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center">
+                      Ver todos los pagos <ArrowRightIcon className="h-3 w-3 ml-1" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-400">No hay registros de pago</p>
+              )}
+            </div>
+          </div>
+
+          {/* Promociones */}
+          {member.promotions?.length > 0 && (
+            <div className="mt-6 bg-gray-750 p-5 rounded-xl">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <TagIcon className="h-5 w-5 mr-2 text-yellow-400" />
+                Promociones Aplicadas
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {member.promotions.map((promo, idx) => (
+                  <div key={idx} className="bg-gray-700 p-3 rounded-lg">
+                    <p className="font-medium text-white">{promo.name}</p>
+                    <p className="text-sm text-yellow-300">{promo.discountPercentage}% de descuento</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Válido hasta: {formatDate(promo.endDate)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 bg-gray-850 border-t border-gray-700 flex justify-end space-x-3">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            Cerrar
+          </button>
+          <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center">
+            <PencilIcon className="h-4 w-4 mr-2" />
+            Editar Miembro
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 // Animation variants
 const container = {
@@ -39,21 +223,56 @@ export default function GymMembersPage() {
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'grid'
   
-  // Filter members based on search term
-  const filteredMembers = members.filter(member => 
-    member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.phone?.includes(searchTerm)
-  );
+  // Filter and sort members
+  const filteredMembers = useMemo(() => {
+    const filtered = members.filter(member => 
+      member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.phone?.includes(searchTerm)
+    );
+    
+    // Sort by registration date (newest first)
+    return [...filtered].sort((a, b) => 
+      new Date(b.registrationDate) - new Date(a.registrationDate)
+    );
+  }, [members, searchTerm]);
   
-  const totalMembers = members.length;
-  const activeMembers = members.filter(m => m.active).length;
+  // Stats calculations
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const total = members.length;
+    const active = members.filter(m => m.active).length;
+    const newToday = members.filter(member => 
+      new Date(member.registrationDate).toISOString().split('T')[0] === today
+    ).length;
+    
+    // Calculate total revenue from payments
+    const totalRevenue = members.reduce((sum, member) => {
+      if (!member.payments) return sum;
+      return sum + member.payments.reduce((memberSum, payment) => 
+        memberSum + (payment.amount || 0), 0
+      );
+    }, 0);
+    
+    return { total, active, newToday, totalRevenue };
+  }, [members]);
+  
+  const { total: totalMembers, active: activeMembers, newToday: newTodayCount, totalRevenue } = stats;
 
   // Fetch members
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
+    // Función para formatear fechas sin desfase de zona horaria
+    const formatDate = (dateString) => {
+      if (!dateString) return '';
+      // Añadimos la hora media del día en UTC para evitar desfases
+      const date = new Date(dateString + 'T12:00:00Z');
+      return date.toLocaleDateString('es-ES', { timeZone: 'UTC' });
+    };
 
     const fetchMembers = async () => {
       if (!isMounted) return;
@@ -164,18 +383,20 @@ export default function GymMembersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
+    <div className="h-full p-4 sm:p-6 bg-gray-900">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto"
+        className="max-w-7xl mx-auto h-full flex flex-col"
       >
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Miembros del Gimnasio</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              Miembros del Gimnasio
+            </h1>
             <p className="mt-1 text-gray-400">
-              {totalMembers} miembros en total • {activeMembers} activos
+              {totalMembers} miembros en total • {activeMembers} activos • {newTodayCount} nuevos hoy
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -187,20 +408,44 @@ export default function GymMembersPage() {
               </div>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Buscar miembros..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder="Buscar por nombre, email o teléfono..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-              Nuevo Miembro
-            </motion.button>
+            <div className="flex space-x-2">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center justify-center px-4 py-2 border border-gray-700 text-sm font-medium rounded-lg text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
+              >
+                {viewMode === 'table' ? (
+                  <>
+                    <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Cuadrícula
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    Tabla
+                  </>
+                )}
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              >
+                <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+                Nuevo Miembro
+              </motion.button>
+            </div>
           </div>
         </div>
 
@@ -213,73 +458,124 @@ export default function GymMembersPage() {
         >
           <motion.div 
             variants={item}
-            className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-xl shadow-lg"
+            className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-xl shadow-lg border border-blue-700/50 hover:border-blue-500/50 transition-all duration-300"
           >
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-blue-500/20">
-                <UserGroupIcon className="h-8 w-8 text-white" />
+            <div className="flex items-start justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-blue-500/20">
+                  <UserGroupIcon className="h-6 w-6 text-blue-200" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-blue-100">Total Miembros</p>
+                  <p className="text-2xl font-bold text-white">{totalMembers}</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-blue-200">Total Miembros</p>
-                <p className="text-2xl font-bold text-white">{totalMembers}</p>
+              <div className="text-blue-200 bg-blue-900/30 px-2 py-1 rounded-md text-xs">
+                +{newTodayCount} hoy
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-blue-700/50">
+              <p className="text-xs text-blue-200 flex items-center">
+                <ArrowPathIcon className="h-3 w-3 mr-1" />
+                Actualizado ahora
+              </p>
+            </div>
+          </motion.div>
+          
+          <motion.div 
+            variants={item}
+            className="bg-gradient-to-br from-green-600 to-green-800 p-6 rounded-xl shadow-lg border border-green-700/50 hover:border-green-500/50 transition-all duration-300"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-green-500/20">
+                  <CheckCircleIcon className="h-6 w-6 text-green-200" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-green-100">Miembros Activos</p>
+                  <p className="text-2xl font-bold text-white">{activeMembers}</p>
+                </div>
+              </div>
+              <div className="text-green-200 bg-green-900/30 px-2 py-1 rounded-md text-xs">
+                {Math.round((activeMembers / (totalMembers || 1)) * 100)}%
+              </div>
+            </div>
+            <div className="mt-4 pt-3">
+              <div className="w-full bg-green-900/30 rounded-full h-1.5">
+                <div 
+                  className="bg-green-400 h-1.5 rounded-full" 
+                  style={{ width: `${(activeMembers / (totalMembers || 1)) * 100}%` }}
+                ></div>
               </div>
             </div>
           </motion.div>
           
           <motion.div 
             variants={item}
-            className="bg-gradient-to-br from-green-600 to-green-800 p-6 rounded-xl shadow-lg"
+            className="bg-gradient-to-br from-purple-600 to-purple-800 p-6 rounded-xl shadow-lg border border-purple-700/50 hover:border-purple-500/50 transition-all duration-300"
           >
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-500/20">
-                <CheckCircleIcon className="h-8 w-8 text-white" />
+            <div className="flex items-start justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-purple-500/20">
+                  <CurrencyDollarIcon className="h-6 w-6 text-purple-200" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-purple-100">Ingresos Totales</p>
+                  <p className="text-2xl font-bold text-white">
+                    {new Intl.NumberFormat('es-PE', {
+                      style: 'currency',
+                      currency: 'PEN'
+                    }).format(totalRevenue)}
+                  </p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-green-200">Miembros Activos</p>
-                <p className="text-2xl font-bold text-white">{activeMembers}</p>
-              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-purple-700/50">
+              <p className="text-xs text-purple-200 flex items-center">
+                <ClockIcon className="h-3 w-3 mr-1" />
+                Actualizado hoy
+              </p>
             </div>
           </motion.div>
           
           <motion.div 
             variants={item}
-            className="bg-gradient-to-br from-purple-600 to-purple-800 p-6 rounded-xl shadow-lg"
+            className="bg-gradient-to-br from-amber-600 to-amber-800 p-6 rounded-xl shadow-lg border border-amber-700/50 hover:border-amber-500/50 transition-all duration-300"
           >
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-purple-500/20">
-                <ArrowTopRightOnSquareIcon className="h-8 w-8 text-white" />
+            <div className="flex items-start justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-full bg-amber-500/20">
+                  <XCircleIcon className="h-6 w-6 text-amber-200" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-amber-100">Miembros Inactivos</p>
+                  <p className="text-2xl font-bold text-white">{totalMembers - activeMembers}</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-purple-200">Nuevos Hoy</p>
-                <p className="text-2xl font-bold text-white">0</p>
+              <div className="text-amber-200 bg-amber-900/30 px-2 py-1 rounded-md text-xs">
+                {Math.round(((totalMembers - activeMembers) / (totalMembers || 1)) * 100)}%
               </div>
             </div>
-          </motion.div>
-          
-          <motion.div 
-            variants={item}
-            className="bg-gradient-to-br from-amber-600 to-amber-800 p-6 rounded-xl shadow-lg"
-          >
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-amber-500/20">
-                <XCircleIcon className="h-8 w-8 text-white" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-amber-200">Inactivos</p>
-                <p className="text-2xl font-bold text-white">{totalMembers - activeMembers}</p>
+            <div className="mt-4 pt-3">
+              <div className="w-full bg-amber-900/30 rounded-full h-1.5">
+                <div 
+                  className="bg-amber-400 h-1.5 rounded-full" 
+                  style={{ width: `${((totalMembers - activeMembers) / (totalMembers || 1)) * 100}%` }}
+                ></div>
               </div>
             </div>
           </motion.div>
         </motion.div>
 
+        {/* Members Table */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-800 shadow-xl rounded-xl overflow-hidden border border-gray-700"
+          className="bg-gray-800 shadow-xl rounded-xl overflow-hidden border border-gray-700 flex-1 flex flex-col"
         >
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto flex-1">
             <table className="min-w-full divide-y divide-gray-700">
-              <thead className="bg-gray-800">
+              <thead className="bg-gray-850">
                 <tr>
                   <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Miembro
@@ -298,7 +594,7 @@ export default function GymMembersPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-700">
                 <AnimatePresence>
                   {filteredMembers.map((member) => (
                     <motion.tr 
@@ -306,26 +602,33 @@ export default function GymMembersPage() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
-                      className="hover:bg-gray-700/50 transition-colors duration-150"
+                      transition={{ duration: 0.2 }}
+                      className="hover:bg-gray-750/50 cursor-pointer"
+                      onClick={() => setSelectedMember(member)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
-                            <UserCircleIcon className="h-10 w-10 text-gray-400" aria-hidden="true" />
+                            {member.photoUrl ? (
+                              <img className="h-10 w-10 rounded-full" src={member.photoUrl} alt={member.name} />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center text-gray-400">
+                                <UserCircleIcon className="h-6 w-6" />
+                              </div>
+                            )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-white">{member.name}</div>
-                            <div className="text-xs text-gray-400">Registrado el {new Date(member.registrationDate).toLocaleDateString()}</div>
+                            <div className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">
+                              {member.name}
+                            </div>
+                            <div className="text-xs text-gray-400">ID: {member.id}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center text-sm text-gray-300">
-                          <EnvelopeIcon className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                          {member.email}
-                        </div>
-                        <div className="mt-1 flex items-center text-sm text-gray-400">
-                          <PhoneIcon className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                        <div className="text-sm text-gray-300">{member.email}</div>
+                        <div className="text-xs text-gray-400 flex items-center mt-1">
+                          <PhoneIcon className="h-3 w-3 mr-1" />
                           {member.phone || 'Sin teléfono'}
                         </div>
                       </td>
@@ -333,80 +636,102 @@ export default function GymMembersPage() {
                         <div className="text-sm text-gray-300">
                           {member.membershipPlan?.name || 'Sin membresía'}
                         </div>
-                        {member.membershipEnd && (
-                          <div className="text-xs text-gray-400">
-                            Vence: {new Date(member.membershipEnd).toLocaleDateString()}
-                          </div>
-                        )}
+                        <div className="text-xs text-gray-400">
+                          {member.membershipEnd ? `Vence: ${new Date(member.membershipEnd).toLocaleDateString()}` : 'Sin fecha de vencimiento'}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {member.active ? (
-                          <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900/30 text-green-400 border border-green-800">
-                            <CheckCircleIcon className="-ml-0.5 mr-1.5 h-3.5 w-3.5 text-green-400" />
-                            Activo
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-900/30 text-red-400 border border-red-800">
-                            <XCircleIcon className="-ml-0.5 mr-1.5 h-3.5 w-3.5 text-red-400" />
-                            Inactivo
-                          </span>
-                        )}
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          member.active 
+                            ? 'bg-green-900/30 text-green-400 border border-green-800'
+                            : 'bg-red-900/30 text-red-400 border border-red-800'
+                        }`}>
+                          {member.active ? 'Activo' : 'Inactivo'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <motion.button 
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="text-blue-400 hover:text-blue-300 mr-4"
-                          title="Editar miembro"
-                        >
-                          <PencilIcon className="h-5 w-5" />
-                        </motion.button>
-                        <motion.button 
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="text-red-400 hover:text-red-300"
-                          title="Eliminar miembro"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </motion.button>
+                        <div className="flex items-center justify-end space-x-2">
+                          <button 
+                            className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 p-1.5 rounded-lg transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Handle edit
+                            }}
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                          <button 
+                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-1.5 rounded-lg transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Handle delete
+                            }}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </motion.tr>
                   ))}
-                  {filteredMembers.length === 0 && (
-                    <motion.tr
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="h-32"
-                    >
-                      <td colSpan={5} className="text-center py-10">
-                        <UserGroupIcon className="mx-auto h-12 w-12 text-gray-600" />
-                        <p className="mt-2 text-sm text-gray-400">
-                          {searchTerm ? 'No se encontraron miembros que coincidan con la búsqueda' : 'No hay miembros registrados'}
-                        </p>
-                      </td>
-                    </motion.tr>
-                  )}
                 </AnimatePresence>
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          <div className="bg-gray-850 px-6 py-3 flex items-center justify-between border-t border-gray-700">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button className="relative inline-flex items-center px-4 py-2 border border-gray-700 text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700">
+                Anterior
+              </button>
+              <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-700 text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700">
+                Siguiente
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-400">
+                  Mostrando <span className="font-medium">1</span> a <span className="font-medium">10</span> de{' '}
+                  <span className="font-medium">{filteredMembers.length}</span> resultados
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-700 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
+                    <span className="sr-only">Anterior</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-700 bg-blue-600 text-sm font-medium text-white">
+                    1
+                  </button>
+                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-700 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                    2
+                  </button>
+                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-700 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                    3
+                  </button>
+                  <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-700 bg-gray-800 text-sm font-medium text-gray-400 hover:bg-gray-700">
+                    <span className="sr-only">Siguiente</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
         </motion.div>
         
-        {/* Pagination */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-400">
-            Mostrando <span className="font-medium">1</span> a <span className="font-medium">{filteredMembers.length}</span> de <span className="font-medium">{totalMembers}</span> miembros
-          </div>
-          <div className="flex space-x-2">
-            <button className="px-3 py-1 rounded-md bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-              Anterior
-            </button>
-            <button className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              Siguiente
-            </button>
-          </div>
-        </div>
+        {/* Member Details Modal */}
+        {selectedMember && (
+          <MemberDetailsModal 
+            member={selectedMember} 
+            onClose={() => setSelectedMember(null)} 
+          />
+        )}
       </motion.div>
     </div>
   );
-}
+};
