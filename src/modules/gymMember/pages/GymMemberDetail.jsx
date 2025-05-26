@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserCircleIcon,
   EnvelopeIcon,
@@ -12,8 +12,10 @@ import {
   ArrowRightIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
+import PaymentsHistory from '../components/PaymentsHistory';
 
 const GymMemberDetail = ({ member, onClose }) => {
+  const [showPaymentsHistory, setShowPaymentsHistory] = useState(false);
   if (!member) return null;
 
   const formatCurrency = (amount) => {
@@ -140,7 +142,10 @@ const GymMemberDetail = ({ member, onClose }) => {
                     </span>
                   </div>
                   <div className="pt-2">
-                    <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center">
+                    <button 
+                      onClick={() => setShowPaymentsHistory(true)}
+                      className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
+                    >
                       Ver todos los pagos <ArrowRightIcon className="h-3 w-3 ml-1" />
                     </button>
                   </div>
@@ -186,6 +191,15 @@ const GymMemberDetail = ({ member, onClose }) => {
           </button>
         </div>
       </motion.div>
+      
+      <AnimatePresence>
+        {showPaymentsHistory && (
+          <PaymentsHistory 
+            payments={member.payments || []} 
+            onClose={() => setShowPaymentsHistory(false)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
