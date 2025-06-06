@@ -306,14 +306,28 @@ const MembershipPage = () => {
                       <motion.button
                         type="button"
                         onClick={() => handleEditPlan(plan)}
-                        className="flex-1 flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        whileHover={{ scale: 1.03, backgroundColor: '#f9fafb' }}
-                        whileTap={{ scale: 0.98 }}
+                        className="flex-1 flex items-center justify-center py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        whileHover={{ 
+                          scale: 1.03,
+                          y: -2,
+                          boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+                        }}
+                        whileTap={{ 
+                          scale: 0.98,
+                          boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                        }}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ 
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 15
+                        }}
                       >
-                        <svg className="h-5 w-5 mr-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        <svg className="w-5 h-5 mr-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        Editar
+                        <span>Editar</span>
                       </motion.button>
                       <motion.button
                         type="button"

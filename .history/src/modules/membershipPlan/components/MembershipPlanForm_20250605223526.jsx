@@ -24,19 +24,7 @@ const MembershipPlanForm = ({ plan, onSave, onCancel, isSubmitting, className = 
   }, [plan]);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    
-    // Special handling for cost input
-    if (name === 'cost') {
-      // Allow empty string or valid number
-      if (value === '' || /^\d*\.?\d*$/.test(value)) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value === '' ? '' : parseFloat(value) || 0
-        }));
-      }
-      return;
-    }
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: name === 'durationMonths' || name === 'cost' ? Number(value) : value
