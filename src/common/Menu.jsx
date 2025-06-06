@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
-import { HomeIcon, UserGroupIcon, CalendarIcon, ChartBarIcon, Cog6ToothIcon, ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UserGroupIcon, CurrencyDollarIcon, ChartBarIcon, Cog6ToothIcon, ArrowLeftStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 
 const menuItems = [
   { name: 'Dashboard', icon: HomeIcon, path: '/' },
   { name: 'Members', icon: UserGroupIcon, path: '/members' },
-  { name: 'Schedule', icon: CalendarIcon, path: '/schedule' },
+  { name: 'Membership Plans', icon: CurrencyDollarIcon, path: '/membership-plans' },
   { name: 'Analytics', icon: ChartBarIcon, path: '/analytics' },
   { name: 'Settings', icon: Cog6ToothIcon, path: '/settings' },
 ];

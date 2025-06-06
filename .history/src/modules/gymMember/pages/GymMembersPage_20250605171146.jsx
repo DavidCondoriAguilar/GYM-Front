@@ -50,7 +50,7 @@ export default function GymMembersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState(null);
   const [memberToDelete, setMemberToDelete] = useState(null);
-  const [viewMode, setViewMode] = useState('table'); 
+  const [viewMode, setViewMode] = useState('table');
   const navigate = useNavigate();
   
   // Filter and sort members

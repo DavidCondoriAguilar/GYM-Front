@@ -1,8 +1,8 @@
 // src/services/gymMemberService.ts
 
-import { GymMember } from '@/models/GymMember';
 import api from '../api/axiosInstance';
 import { GYM_MEMBERS_ENDPOINT } from '../api/endpoints';
+import { GymMember } from '../models/GymMember';
 
 const GymMemberService = {
   getAllMembers: async (): Promise<GymMember[]> => {

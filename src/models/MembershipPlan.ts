@@ -1,8 +1,18 @@
+export enum MembershipType {
+  STANDARD = 'STANDARD',
+  PREMIUM = 'PREMIUM',
+  VIP = 'VIP'
+}
+
 export interface MembershipPlan {
+  id: string;
+  name: string;
+  durationMonths: number;
+  cost: number;
+  description: string;
+  type: MembershipType;
+  gymMembers?: Array<{
     id: string;
-    name: string;
-    durationMonths: number;
-    cost: number;
-    description: string;
-    type: string; // o enum si tienes tipos fijos
-  }
+    // Add other GymMember fields if needed
+  }>;
+}
