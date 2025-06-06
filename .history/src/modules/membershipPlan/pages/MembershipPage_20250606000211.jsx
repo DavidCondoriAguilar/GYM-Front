@@ -114,11 +114,6 @@ const MembershipPage = () => {
     setShowDeleteDialog(true);
   };
 
-  const handleCloseDeleteDialog = () => {
-    setShowDeleteDialog(false);
-    setSelectedPlan(null);
-  };
-
   const handleUpdatePlan = async (formData) => {
     try {
       setIsProcessing(true);
@@ -437,7 +432,7 @@ const MembershipPage = () => {
 
         <ConfirmationDialog
           isOpen={showDeleteDialog}
-          onClose={handleCloseDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
           onConfirm={handleDeleteConfirm}
           title="Eliminar Plan"
           message={`¿Estás seguro de que deseas eliminar el plan "${selectedPlan?.name}"? Esta acción no se puede deshacer.`}
