@@ -63,11 +63,6 @@ export default function PaymentPage() {
     setShowCreateModal(true);
   };
 
-  // Función para refrescar los datos
-  const refreshData = () => {
-    refreshPayments();
-  };
-
   const handleCloseModal = () => {
     setShowCreateModal(false);
     setSelectedMemberId(null);
@@ -214,7 +209,6 @@ export default function PaymentPage() {
               isOpen={showCreateModal}
               onClose={handleCloseModal}
               gymMemberId={selectedMemberId}
-              onRefresh={refreshData}
             />
           )}
         </AnimatePresence>

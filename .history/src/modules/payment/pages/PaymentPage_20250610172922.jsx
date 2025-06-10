@@ -54,6 +54,8 @@ export default function PaymentPage() {
     setView(viewType);
   };
 
+  console.log('PaymentPage mounted');
+  console.log('Payments:', payments);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState(null);
 
@@ -61,11 +63,6 @@ export default function PaymentPage() {
   const handleCreatePayment = (memberId) => {
     setSelectedMemberId(memberId);
     setShowCreateModal(true);
-  };
-
-  // Función para refrescar los datos
-  const refreshData = () => {
-    refreshPayments();
   };
 
   const handleCloseModal = () => {
@@ -78,6 +75,9 @@ export default function PaymentPage() {
     refreshPayments();
   }, [refreshPayments]);
 
+  console.log('Payments:', payments);
+  console.log('Loading:', loading);
+  console.log('Error:', error);
 
   if (loading) {
     return (
@@ -193,7 +193,7 @@ export default function PaymentPage() {
               onClick={() => handleCreatePayment('')}
               className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center "
             >
-              <PlusIcon className="w-5 h-5 mr-2 text-white" />
+              <PlusIcon className="w-5 h-5 mr-2 text-gray-900" />
               Nuevo Pago
             </motion.button>
             <motion.button
@@ -214,7 +214,6 @@ export default function PaymentPage() {
               isOpen={showCreateModal}
               onClose={handleCloseModal}
               gymMemberId={selectedMemberId}
-              onRefresh={refreshData}
             />
           )}
         </AnimatePresence>
