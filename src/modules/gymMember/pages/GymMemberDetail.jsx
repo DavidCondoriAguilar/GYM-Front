@@ -10,12 +10,14 @@ import {
   TagIcon,
   XMarkIcon,
   ArrowRightIcon,
-  PencilIcon
+  PencilIcon,
+  ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 import PaymentsHistory from '../components/PaymentsHistory';
 
 const GymMemberDetail = ({ member, onClose }) => {
   const [showPaymentsHistory, setShowPaymentsHistory] = useState(false);
+  const [showCopiedNotification, setShowCopiedNotification] = useState(false);
   if (!member) return null;
 
   const formatCurrency = (amount) => {
@@ -23,6 +25,12 @@ const GymMemberDetail = ({ member, onClose }) => {
       style: 'currency',
       currency: 'PEN'
     }).format(amount);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setShowCopiedNotification(true);
+    setTimeout(() => setShowCopiedNotification(false), 2000);
   };
 
   const formatDate = (dateString) => {
@@ -49,6 +57,34 @@ const GymMemberDetail = ({ member, onClose }) => {
               <EnvelopeIcon className="h-4 w-4 mr-1" />
               {member.email}
             </p>
+            <div className="flex items-center space-x-2">
+              <p className="text-gray-400 flex items-center">
+                <TagIcon className="h-4 w-4 mr-1" />
+                ID: {member.id}
+              </p>
+              <div className="relative">
+                <button
+                  onClick={() => copyToClipboard(member.id)}
+                  className="p-1 rounded hover:bg-gray-700 transition-colors"
+                  title="Copiar ID"
+                >
+                  <ClipboardDocumentCheckIcon className="h-4 w-4 text-gray-400 hover:text-white" />
+                </button>
+                <AnimatePresence>
+                  {showCopiedNotification && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-1 px-2 py-1 bg-green-600/90 text-white text-xs rounded-full"
+                    >
+                      Copiado!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
           <button 
             onClick={onClose}

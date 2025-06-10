@@ -13,6 +13,7 @@ const ModalDetailsMembership = lazy(() => import('../modules/membershipPlan/page
 const MembershipPlanById = lazy(() => import('../modules/membershipPlan/components/MembershipPlanById'));
 const AnalyticsPage = lazy(() => import('../modules/analytics/pages/AnalyticsPage'));
 const SettingsPage = lazy(() => import('../modules/settings/pages/SettingsPage'));
+const PaymentPage = lazy(() => import('../modules/payment/pages/PaymentPage'));
 
 const AppRoutes = () => {
   return (
@@ -27,6 +28,7 @@ const AppRoutes = () => {
         <Route path="/membership-plans/new" element={<ModalCreateMembership />} />
         <Route path="/membership-plans/:id/edit" element={<ModalEditMembership />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         {/* Add more routes as needed */}
       </Routes>
