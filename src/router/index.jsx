@@ -5,7 +5,7 @@ import Loading from '../common/Loading';
 // Lazy load pages
 const Dashboard = lazy(() => import('../modules/dashboard/pages/DashboardPage'));
 const GymMembersPage = lazy(() => import('../modules/gymMember/pages/GymMembersPage'));
-const ModalCreateMember = lazy(() => import('../modules/gymMember/components/ModalCreateMember.jsx'));
+const ModalCreateMember = lazy(() => import('../modules/gymMember/pages/ModalCreateMember'));
 const MembershipPage = lazy(() => import('../modules/membershipPlan/pages/MembershipPage'));
 const ModalCreateMembership = lazy(() => import('../modules/membershipPlan/pages/ModalCreateMembership'));
 const ModalEditMembership = lazy(() => import('../modules/membershipPlan/pages/ModalEditMembership'));
