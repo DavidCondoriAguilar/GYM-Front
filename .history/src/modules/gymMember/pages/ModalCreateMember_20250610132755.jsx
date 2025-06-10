@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { toast } from 'sonner';
@@ -7,26 +6,74 @@ import GymMemberService from '../services/gymMember.service';
 import MemberForm from '../components/MemberForm';
 import membershipPlanService from '../../membershipPlan/service/membershipPlan.service';
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15
+    }
+  },
+  exit: { y: -20, opacity: 0 }
+};
+
+const overlayVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { duration: 0.3 }
+  },
+  exit: { 
+    opacity: 0,
+    transition: { duration: 0.2 }
+  }
+};
+
+const modalVariants = {
+  hidden: { y: 50, opacity: 0 },
+  visible: { 
+    y: 0, 
+    opacity: 1,
+    transition: { 
+      type: 'spring',
+      damping: 25,
+      stiffness: 500 
+    }
+  },
+  exit: { 
+    y: 50, 
+    opacity: 0,
+    transition: { duration: 0.2 }
+  }
+};
+
 const ModalCreateMember = ({ onClose }) => {
-  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [membershipPlans, setMembershipPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
 
-  const handleClose = () => {
-    if (onClose) {
-      onClose();
-    } else {
-      navigate(-1);
-    }
-  };
-
+  // Load membership plans on component mount
   useEffect(() => {
     const loadMembershipPlans = async () => {
       try {
         console.log('Fetching membership plans...');
         const response = await membershipPlanService.getPlans();
+        // The service already returns the data directly, no need for .content
         const plans = Array.isArray(response) ? response : [];
         console.log('Plans received:', plans);
         
@@ -58,6 +105,7 @@ const ModalCreateMember = ({ onClose }) => {
 
       setIsSubmitting(true);
       
+      // Format the member data according to the API requirements
       const memberData = {
         name: formData.name,
         email: formData.email,
@@ -78,11 +126,7 @@ const ModalCreateMember = ({ onClose }) => {
       const newMember = await GymMemberService.createMember(memberData);
       
       toast.success('Miembro creado exitosamente');
-      
-      // Redirigir a la página de miembros después de un breve delay para mostrar la notificación
-      setTimeout(() => {
-        navigate('/members');
-      }, 1500);
+      onClose?.(newMember);
       
     } catch (error) {
       console.error('Error creating member:', error);
@@ -97,25 +141,25 @@ const ModalCreateMember = ({ onClose }) => {
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        variants={overlayVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
       >
-        <div className="fixed inset-0 bg-black/50" onClick={handleClose} />
+        <div className="fixed inset-0 bg-black/50" onClick={onClose} />
         
         <motion.div
           className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 50, opacity: 0 }}
+          variants={modalVariants}
         >
+          {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Nuevo Miembro
             </h2>
             <button
               type="button"
-              onClick={handleClose}
+              onClick={onClose}
               className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
               disabled={isSubmitting}
             >
@@ -123,13 +167,11 @@ const ModalCreateMember = ({ onClose }) => {
             </button>
           </div>
 
+          {/* Form */}
           <div className="p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
+            <motion.div variants={containerVariants} initial="hidden" animate="visible">
               <div className="space-y-6">
+                {/* Membership Plan Selector */}
                 <div>
                   <label htmlFor="membershipPlan" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Plan de Membresía *
@@ -159,7 +201,7 @@ const ModalCreateMember = ({ onClose }) => {
 
                 <MemberForm
                   onSave={handleSave}
-                  onCancel={handleClose}
+                  onCancel={onClose}
                   isSubmitting={isSubmitting}
                 />
               </div>
